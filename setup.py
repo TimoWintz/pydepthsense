@@ -1,10 +1,16 @@
 from distutils.core import setup, Extension
+import numpy
+
+# envpath = '/home/antoine/anaconda3/envs/fistwriter-py3/'
+envpath = ''
+from distutils.sysconfig import get_python_inc
+print(get_python_inc())
 
 module = Extension('DepthSense',
-        include_dirs = ['/usr/local/include', '/opt/softkinetic/DepthSenseSDK/include'],
-        libraries = ['DepthSensePlugins', 'DepthSense', 'python2.7', 'turbojpeg'],
-        library_dirs = ['/usr/local/lib', '/opt/softkinetic/DepthSenseSDK/lib'],
-        #extra_compile_args = ['-std=g++11'],
+        include_dirs = [numpy.get_include(), '/opt/softkinetic/DepthSenseSDK/include'],
+        libraries = ['DepthSense'],
+        library_dirs = [envpath+'/lib', '/opt/softkinetic/DepthSenseSDK/lib'],
+        # extra_compile_args = ['-std=g++11'],
         sources = ['src/depthsense.cxx', 'src/initdepthsense.cxx', 'src/imageproccessing.cxx'])
 
 setup (name = 'DepthSense',

@@ -1,6 +1,6 @@
 import DepthSense as ds
 import numpy as np
-from SimpleCV import Image
+# from SimpleCV import Image
 
 class DS325:
     ''' DepthSense camera class for simple cv '''
@@ -25,8 +25,9 @@ class DS325:
         np.clip(depth, 0, 2**10 - 1, depth)
         depth >>=2
         depth = depth.astype(np.uint8)
-        iD = Image(depth.transpose())
-        return iD.invert()
+        return depth.transpose()
+        # iD = Image(depth.transpose())
+        # return iD.invert()
 
 
     def getConvolvedDepth(self, kern, rep, bias):
@@ -37,8 +38,9 @@ class DS325:
         np.clip(conv, 0, 2**10 - 1, conv)
         conv >>=2
         conv = conv.astype(np.uint8)
-        iE = Image(conv.transpose())
-        return iE.invert()
+        return conv.transpose()
+        # iE = Image(conv.transpose())
+        # return iE.invert()
 
     def getDepthFull(self):
         ''' Return the pure 16bit depth map as a numpy array '''
@@ -68,28 +70,32 @@ class DS325:
 
         image = ds.getColourMap()
         image = image[:,:,::-1]
-        return Image(image.transpose([1,0,2]))
+        # return Image(
+        return image.transpose([1,0,2])
 
     def getGreyScale(self):
         ''' Return a simple cv compatiable 8bit colour image ''' 
 
         grey = ds.getGreyScaleMap()
-        return Image(grey.transpose())
+        # return Image(
+        return grey.transpose()
 
     def getConvolvedImage(self, kern, rep, bias):
         ''' Return a simple cv compatiable 8bit greyscaled image that has had 
         the specified kernel applied rep times with bias supplied'''
 
         conv = ds.convolveColourMap(kern, rep, bias)
-        iE = Image(conv.transpose())
-        return iE.invert()
+        return conv.transpose()
+        # iE = Image(conv.transpose())
+        # return iE.invert()
 
     def getDepthColoured(self):
         ''' Return a simple cv compatiable 8bit colour image ''' 
 
         depthc = ds.getDepthColouredMap()
         #depthc = depthc[:,:,::-1]
-        return Image(depthc.transpose([1,0,2]))
+        # return Image(
+        return depthc.transpose([1,0,2])
 
 
     def getAcceleration(self):
@@ -111,7 +117,8 @@ class DS325:
 
         sync = ds.getSyncMap()
         sync = sync[:,:,::-1]
-        return Image(sync.transpose([1,0,2]))
+        # return Image(
+        return sync.transpose([1,0,2])
 
     def getSyncFull(self):
         ''' Return a colour synced depth map, like above indicies here work on

@@ -1,6 +1,7 @@
 #!/bin/python2
-from SimpleCV import *
+# from SimpleCV import *
 from ds325 import DS325
+import cv2
 
 depthsense = DS325()
 while True:
@@ -8,6 +9,9 @@ while True:
     # THESE THREE ARE SIMPLECV IMAGE 
     iD = depthsense.getDepth() 
     #iD.show()
+    cv2.imshow('A', iD)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
     iS = depthsense.getImage()
     #iS.show()
@@ -32,12 +36,12 @@ while True:
     # THESE THREE ARE NOT SIMPLECV IMAGES BY DEFAULT 
     vertex = depthsense.getVertex()
     # vertex map does not get returned as an image as it makes no sense
-    iV = Image(vertex.transpose([1,0,2]))
+    # iV = Image(vertex.transpose([1,0,2]))
     #iV.show()
 
     vertexFP = depthsense.getVertexFP()
     # vertex map does not get returned as an image as it makes no sense
-    iP = Image(vertexFP.transpose([1,0,2]))
+    # iP = Image(vertexFP.transpose([1,0,2]))
 
     # accel is not returned as a simplecv image
     iA = depthsense.getAcceleration()
