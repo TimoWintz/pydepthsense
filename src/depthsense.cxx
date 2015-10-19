@@ -12,8 +12,8 @@
 
 // Python Module includes
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <python2.7/Python.h>
-#include <python2.7/numpy/arrayobject.h>
+#include <Python.h>
+#include <numpy/arrayobject.h>
 
 // MS completly untested
 #ifdef _MSC_VER
@@ -67,7 +67,7 @@ static void saveMap(char *map, char* file)
     f.open(file);
     cout << "Writing to file: " << file << endl;
     int16_t vx; int16_t vy; int16_t vz;
-    int16_t nx; int16_t ny; int16_t nz;
+    // int16_t nx; int16_t ny; int16_t nz;
     for(int i=0; i < dH; i++) {
         for(int j=0; j < dW; j++) {
             vx = vPrintMap[i*dW*3 + j*3 + 0];
@@ -359,7 +359,8 @@ PyMODINIT_FUNC initDepthSense(void)
 {
     (void) Py_InitModule("DepthSense", DepthSenseMethods);
     // Clean up forked process, attach it to the python exit hook
-    (void) Py_AtExit(killds);
+
+    // (void) Py_AtExit(killds);  // force the user to clean up module manually?
     import_array();
 }
 
