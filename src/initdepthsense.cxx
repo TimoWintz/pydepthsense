@@ -24,13 +24,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 // C++ includes
 #include <vector>
 #include <exception>
 #include <iostream>
 #include <fstream>
-//#include <thread>
 
 // DepthSense SDK includes
 #include <DepthSense.hxx>
@@ -93,8 +93,8 @@ int16_t * diffMap;
 int16_t * diffResult;
 int16_t * normalResult;
 
-// clean up
-int child_pid = 0;
+// thread for running processing loop
+pthread_t looper;
 
 // can't write atomic op but i can atleast do a swap
 static void uptrSwap (uint8_t **pa, uint8_t **pb){
@@ -409,38 +409,34 @@ static void onDeviceDisconnected(Context context, Context::DeviceRemovedData dat
 
 void killds()
 {
-    if (child_pid !=0) {
-        cout << "DEPTHSENSE SHUTDOWN INPROGRESS ..." << endl;
-        kill(child_pid, SIGTERM);
-        munmap(depthMap, dshmsz);
-        munmap(depthFullMap, dshmsz);
-        munmap(colourMap, cshmsz*3);
-        munmap(colourFullMap, cshmsz*3);
-        munmap(vertexMap, vshmsz*3);
-        munmap(vertexFullMap, vshmsz*3);
-        munmap(vertexFMap, ushmsz*3);
-        munmap(vertexFFullMap, ushmsz*3);
-        munmap(uvMap, ushmsz*2);
-        munmap(uvMap, ushmsz*2);
-        munmap(uvFullMap, ushmsz*2);
-        free(depthCMap);
-        free(depthColouredMap);
-        free(dConvolveMap);
-        free(dConvolveResult);
-        free(cConvolveMap);
-        free(cConvolveResult);
-        free(greyColourMap);
-        free(greyResult);
-        free(normalMap);
-        free(dxMap);
-        free(dyMap);
-        free(diffMap);
-        free(diffResult);
-        free(normalResult);
-        cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
-
-    }
-
+	// TODO handle thread
+    cout << "DEPTHSENSE SHUTDOWN INPROGRESS ..." << endl;
+    munmap(depthMap, dshmsz);
+    munmap(depthFullMap, dshmsz);
+    munmap(colourMap, cshmsz*3);
+    munmap(colourFullMap, cshmsz*3);
+    munmap(vertexMap, vshmsz*3);
+    munmap(vertexFullMap, vshmsz*3);
+    munmap(vertexFMap, ushmsz*3);
+    munmap(vertexFFullMap, ushmsz*3);
+    munmap(uvMap, ushmsz*2);
+    munmap(uvMap, ushmsz*2);
+    munmap(uvFullMap, ushmsz*2);
+    free(depthCMap);
+    free(depthColouredMap);
+    free(dConvolveMap);
+    free(dConvolveResult);
+    free(cConvolveMap);
+    free(cConvolveResult);
+    free(greyColourMap);
+    free(greyResult);
+    free(normalMap);
+    free(dxMap);
+    free(dyMap);
+    free(diffMap);
+    free(diffResult);
+    free(normalResult);
+    cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
 }
 
 
@@ -466,9 +462,50 @@ static void * initblock(int sz)
     return block;
 }
 
+void* loopfunc(void *arg)
+{
+	g_context = Context::createStandalone();
+    // TODO: Support multiple cameras ... standalone mode forces
+    // a single session, can instead create a server once and join
+    // to that server each time. Allow a list of devices
+    //g_context = Context::create("localhost");
+    g_context.deviceAddedEvent().connect(&onDeviceConnected);
+    g_context.deviceRemovedEvent().connect(&onDeviceDisconnected);
+
+    // Get the list of currently connected devices
+    vector<Device> da = g_context.getDevices();
+
+    // We are only interested in the first device
+    if (da.size() >= 1)
+    {
+        g_bDeviceFound = true;
+
+        da[0].nodeAddedEvent().connect(&onNodeConnected);
+        da[0].nodeRemovedEvent().connect(&onNodeDisconnected);
+
+        vector<Node> na = da[0].getNodes();
+
+    	for (int n = 0; n < (int)na.size();n++)
+			configureNode(na[n]);
+    }
+
+    g_context.startNodes();
+	cout << "THREAD RUNNING" << endl;
+    g_context.run();
+
+    //TODO: Proper clean up call context.quit() async in child proc somehow
+    // Currently proc is just killed
+    g_context.stopNodes();
+
+    if (g_cnode.isSet()) g_context.unregisterNode(g_cnode);
+    if (g_dnode.isSet()) g_context.unregisterNode(g_dnode);
+    if (g_anode.isSet()) g_context.unregisterNode(g_anode);
+
+	return NULL;
+}
+
 void initds()
 {
-    cout << "DEPTHSENSE STARTUP INPROGRESS ..." << endl;
     // shared mem double buffers
     depthMap = (int16_t *) initmap(dshmsz); 
     depthFullMap = (int16_t *) initmap(dshmsz); 
@@ -508,50 +545,7 @@ void initds()
     diffResult = (int16_t *) initblock(dshmsz*3);
     normalResult = (int16_t *) initblock(dshmsz*3);
 
-    child_pid = fork();
-
-    // child goes into loop
-    if (child_pid == 0) {
-        g_context = Context::createStandalone();
-        // TODO: Support multiple cameras ... standalone mode forces
-        // a single session, can instead create a server once and join
-        // to that server each time. Allow a list of devices
-        //g_context = Context::create("localhost");
-        g_context.deviceAddedEvent().connect(&onDeviceConnected);
-        g_context.deviceRemovedEvent().connect(&onDeviceDisconnected);
-
-        // Get the list of currently connected devices
-        vector<Device> da = g_context.getDevices();
-
-        // We are only interested in the first device
-        if (da.size() >= 1)
-        {
-            g_bDeviceFound = true;
-
-            da[0].nodeAddedEvent().connect(&onNodeConnected);
-            da[0].nodeRemovedEvent().connect(&onNodeDisconnected);
-
-            vector<Node> na = da[0].getNodes();
-
-            for (int n = 0; n < (int)na.size();n++)
-                configureNode(na[n]);
-        }
-
-        g_context.startNodes();
-        g_context.run();
-
-        //TODO: Proper clean up call context.quit() async in child proc somehow
-        // Currently proc is just killed
-        g_context.stopNodes();
-
-        if (g_cnode.isSet()) g_context.unregisterNode(g_cnode);
-        if (g_dnode.isSet()) g_context.unregisterNode(g_dnode);
-        if (g_anode.isSet()) g_context.unregisterNode(g_anode);
-
-        exit(EXIT_SUCCESS);
-    }
-
-    cout << "DEPTHSENSE STARTUP SUCCESSFUL" << endl;
-
+    // launch processing loop in a separate thread
+    pthread_create(&looper, NULL, loopfunc, (void*)NULL);
 }
 
