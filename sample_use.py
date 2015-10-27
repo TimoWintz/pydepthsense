@@ -54,3 +54,5 @@ while True:
     #iD.sideBySide(iY).show()
     #iH.sideBySide(iE).show()
 
+depthsense.close()
+

@@ -12,6 +12,9 @@ class DS325:
         used ''' 
         ds.initDepthSense()
 
+    def close(self):
+        ds.killDepthSense()
+
     def saveMap(self, name, file_name):
         ''' Save the specified map to file file_name '''
 
