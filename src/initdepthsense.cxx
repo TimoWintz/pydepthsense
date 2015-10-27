@@ -409,8 +409,10 @@ static void onDeviceDisconnected(Context context, Context::DeviceRemovedData dat
 
 void killds()
 {
-	// TODO handle thread
-    cout << "DEPTHSENSE SHUTDOWN INPROGRESS ..." << endl;
+    cout << "DEPTHSENSE SHUTDOWN IN PROGRESS ..." << endl;
+	g_context.quit();
+	pthread_join(looper, NULL);
+	cout << "THREAD EXIT" << endl;
     munmap(depthMap, dshmsz);
     munmap(depthFullMap, dshmsz);
     munmap(colourMap, cshmsz*3);
@@ -438,7 +440,6 @@ void killds()
     free(normalResult);
     cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
 }
-
 
 static void * initmap(int sz) 
 {
@@ -490,17 +491,9 @@ void* loopfunc(void *arg)
     }
 
     g_context.startNodes();
-	cout << "THREAD RUNNING" << endl;
+	cout << "EVENT LOOP RUNNING" << endl;
     g_context.run();
-
-    //TODO: Proper clean up call context.quit() async in child proc somehow
-    // Currently proc is just killed
-    g_context.stopNodes();
-
-    if (g_cnode.isSet()) g_context.unregisterNode(g_cnode);
-    if (g_dnode.isSet()) g_context.unregisterNode(g_dnode);
-    if (g_anode.isSet()) g_context.unregisterNode(g_anode);
-
+	cout << "EVENT LOOP FINISHED" << endl;
 	return NULL;
 }
 
