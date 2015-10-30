@@ -407,12 +407,34 @@ static void onDeviceDisconnected(Context context, Context::DeviceRemovedData dat
     printf("Device disconnected\n");
 }
 
+static void * initmap(int sz) 
+{
+    void * map;     
+    if ((map = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED) {
+        perror("mmap: cannot alloc shmem;");
+        exit(1);
+    }
+
+    return map;
+}
+
+static void * initblock(int sz) 
+{
+    void * block;     
+    if ((block = malloc(sz)) == NULL) {
+        perror("malloc: cannot alloc mem;");
+        exit(1);
+    }
+
+    return block;
+}
+
 void killds()
 {
     cout << "DEPTHSENSE SHUTDOWN IN PROGRESS ..." << endl;
-	g_context.quit();
-	pthread_join(looper, NULL);
-	cout << "THREAD EXIT" << endl;
+    g_context.quit();
+    pthread_join(looper, NULL);
+    cout << "THREAD EXIT" << endl;
     munmap(depthMap, dshmsz);
     munmap(depthFullMap, dshmsz);
     munmap(colourMap, cshmsz*3);
@@ -441,60 +463,12 @@ void killds()
     cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
 }
 
-static void * initmap(int sz) 
-{
-    void * map;     
-    if ((map = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED) {
-        perror("mmap: cannot alloc shmem;");
-        exit(1);
-    }
-
-    return map;
-}
-
-static void * initblock(int sz) 
-{
-    void * block;     
-    if ((block = malloc(sz)) == NULL) {
-        perror("malloc: cannot alloc mem;");
-        exit(1);
-    }
-
-    return block;
-}
-
 void* loopfunc(void *arg)
 {
-	g_context = Context::createStandalone();
-    // TODO: Support multiple cameras ... standalone mode forces
-    // a single session, can instead create a server once and join
-    // to that server each time. Allow a list of devices
-    //g_context = Context::create("localhost");
-    g_context.deviceAddedEvent().connect(&onDeviceConnected);
-    g_context.deviceRemovedEvent().connect(&onDeviceDisconnected);
-
-    // Get the list of currently connected devices
-    vector<Device> da = g_context.getDevices();
-
-    // We are only interested in the first device
-    if (da.size() >= 1)
-    {
-        g_bDeviceFound = true;
-
-        da[0].nodeAddedEvent().connect(&onNodeConnected);
-        da[0].nodeRemovedEvent().connect(&onNodeDisconnected);
-
-        vector<Node> na = da[0].getNodes();
-
-    	for (int n = 0; n < (int)na.size();n++)
-			configureNode(na[n]);
-    }
-
-    g_context.startNodes();
-	cout << "EVENT LOOP RUNNING" << endl;
+    cout << "EVENT LOOP RUNNING" << endl;
     g_context.run();
-	cout << "EVENT LOOP FINISHED" << endl;
-	return NULL;
+    cout << "EVENT LOOP FINISHED" << endl;
+    return NULL;
 }
 
 void initds()
@@ -537,6 +511,34 @@ void initds()
     diffMap = (int16_t *) initblock(dshmsz*3);
     diffResult = (int16_t *) initblock(dshmsz*3);
     normalResult = (int16_t *) initblock(dshmsz*3);
+
+    // prepare the context
+    g_context = Context::createStandalone();
+    // TODO: Support multiple cameras ... standalone mode forces
+    // a single session, can instead create a server once and join
+    // to that server each time. Allow a list of devices
+    //g_context = Context::create("localhost");
+    g_context.deviceAddedEvent().connect(&onDeviceConnected);
+    g_context.deviceRemovedEvent().connect(&onDeviceDisconnected);
+
+    // Get the list of currently connected devices
+    vector<Device> da = g_context.getDevices();
+
+    // We are only interested in the first device
+    if (da.size() >= 1)
+    {
+        g_bDeviceFound = true;
+
+        da[0].nodeAddedEvent().connect(&onNodeConnected);
+        da[0].nodeRemovedEvent().connect(&onNodeDisconnected);
+
+        vector<Node> na = da[0].getNodes();
+
+        for (int n = 0; n < (int)na.size();n++)
+            configureNode(na[n]);
+    }
+
+    g_context.startNodes();
 
     // launch processing loop in a separate thread
     pthread_create(&looper, NULL, loopfunc, (void*)NULL);
