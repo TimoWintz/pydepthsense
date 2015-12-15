@@ -10,6 +10,7 @@
  * -----------------------------------------------------------------------------
  */
 
+
 // Python Module includes
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
@@ -36,7 +37,7 @@
 
 // Application includes
 #include "initdepthsense.h"
-#include "imageproccessing.h"
+// #include "imageproccessing.h"
 
 // internal map copies
 uint8_t colourMapClone[640*480*3];
@@ -58,31 +59,31 @@ int16_t normalResultClone[320*240*3];
 using namespace std;
 
 // Minor processing (kind of hard to move)
-static void saveMap(char *map, char* file)
-{
-    (void) map;
-    //TODO: Make this a not shitty and specific function
-    //TODO: memcpy and loop based on name in map? 
-    ofstream f;
-    f.open(file);
-    cout << "Writing to file: " << file << endl;
-    int16_t vx; int16_t vy; int16_t vz;
-    // int16_t nx; int16_t ny; int16_t nz;
-    for(int i=0; i < dH; i++) {
-        for(int j=0; j < dW; j++) {
-            vx = vPrintMap[i*dW*3 + j*3 + 0];
-            vy = vPrintMap[i*dW*3 + j*3 + 1];
-            vz = vPrintMap[i*dW*3 + j*3 + 2];
+// static void saveMap(char *map, char* file)
+// {
+//     (void) map;
+//     //TODO: Make this a not shitty and specific function
+//     //TODO: memcpy and loop based on name in map? 
+//     ofstream f;
+//     f.open(file);
+//     cout << "Writing to file: " << file << endl;
+//     int16_t vx; int16_t vy; int16_t vz;
+//     // int16_t nx; int16_t ny; int16_t nz;
+//     for(int i=0; i < dH; i++) {
+//         for(int j=0; j < dW; j++) {
+//             vx = vPrintMap[i*dW*3 + j*3 + 0];
+//             vy = vPrintMap[i*dW*3 + j*3 + 1];
+//             vz = vPrintMap[i*dW*3 + j*3 + 2];
 
-            if (vz != 32001) {
-                f << vx << "," << vy << "," << vz << endl;
-            }
-        }
-    }
+//             if (vz != 32001) {
+//                 f << vx << "," << vy << "," << vz << endl;
+//             }
+//         }
+//     }
 
-    cout << "Complete!" << endl;
-    f.close();
-}
+//     cout << "Complete!" << endl;
+//     f.close();
+// }
 
 void buildSyncMap()
 {
@@ -156,18 +157,18 @@ static PyObject *getDepth(PyObject *self, PyObject *args)
     return PyArray_SimpleNewFromData(2, dims, NPY_INT16, depthMapClone);
 }
 
-static PyObject *getGreyScale(PyObject *self, PyObject *args)
-{
+// static PyObject *getGreyScale(PyObject *self, PyObject *args)
+// {
 
-    npy_intp dims[2] = {cH, cW};
+//     npy_intp dims[2] = {cH, cW};
 
-    memcpy(greyColourMap, colourFullMap, cshmsz*3);
-    memset(greyResult, 0, cshmsz);
-    toGreyScale(0.2126, 0.7152, 0.0722);
-    memcpy(greyResultClone, greyResult, cshmsz);
+//     memcpy(greyColourMap, colourFullMap, cshmsz*3);
+//     memset(greyResult, 0, cshmsz);
+//     toGreyScale(0.2126, 0.7152, 0.0722);
+//     memcpy(greyResultClone, greyResult, cshmsz);
 
-    return PyArray_SimpleNewFromData(2, dims, NPY_UINT8, greyResultClone);
-}
+//     return PyArray_SimpleNewFromData(2, dims, NPY_UINT8, greyResultClone);
+// }
 
 /* TODO: extract this bad boy */
 static PyObject *getDepthColoured(PyObject *self, PyObject *args)
@@ -234,130 +235,130 @@ static PyObject *killDS(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-/* TODO: Make this actually work, refer to checkHood.cxx */
-static PyObject *getBlob(PyObject *self, PyObject *args)
-{
-    int i;
-    int j;
-    double thresh_high;
-    double thresh_low;
+// /* TODO: Make this actually work, refer to checkHood.cxx */
+// static PyObject *getBlob(PyObject *self, PyObject *args)
+// {
+//     int i;
+//     int j;
+//     double thresh_high;
+//     double thresh_low;
 
-    if (!PyArg_ParseTuple(args, "iidd", &i, &j,  &thresh_high, &thresh_low))
-        return NULL;
+//     if (!PyArg_ParseTuple(args, "iidd", &i, &j,  &thresh_high, &thresh_low))
+//         return NULL;
 
-    //npy_intp dims[2] = {dH, dW};
+//     //npy_intp dims[2] = {dH, dW};
 
-    //memcpy(blobMap, depthFullMap, dshmsz);
-    // SHUTDOWN findBlob(i, j, thresh_high, thresh_low); 
-    //memcpy(blobResultClone, blobResult, dshmsz);
-    //return PyArray_SimpleNewFromData(2, dims, NPY_INT16, blobResultClone);
-    Py_RETURN_NONE;
+//     //memcpy(blobMap, depthFullMap, dshmsz);
+//     // SHUTDOWN findBlob(i, j, thresh_high, thresh_low); 
+//     //memcpy(blobResultClone, blobResult, dshmsz);
+//     //return PyArray_SimpleNewFromData(2, dims, NPY_INT16, blobResultClone);
+//     Py_RETURN_NONE;
     
-}
+// }
 
-static PyObject *convolveDepth(PyObject *self, PyObject *args)
-{
-    char *kern;
-    int repeat;
-    double bias;
+// static PyObject *convolveDepth(PyObject *self, PyObject *args)
+// {
+//     char *kern;
+//     int repeat;
+//     double bias;
 
-    if (!PyArg_ParseTuple(args, "sid", &kern, &repeat, &bias))
-        return NULL;
+//     if (!PyArg_ParseTuple(args, "sid", &kern, &repeat, &bias))
+//         return NULL;
 
-    memcpy(dConvolveMap, depthFullMap, dshmsz);
+//     memcpy(dConvolveMap, depthFullMap, dshmsz);
    
-    for(int i = 0; i < repeat; i++) {
-        applyKernelDepth(kern, dW, dH, bias); 
-        memcpy(dConvolveMap, dConvolveResult, dshmsz);
-    } 
+//     for(int i = 0; i < repeat; i++) {
+//         applyKernelDepth(kern, dW, dH, bias); 
+//         memcpy(dConvolveMap, dConvolveResult, dshmsz);
+//     } 
 
-    npy_intp dims[2] = {dH, dW};
-    memcpy(dConvolveResultClone, dConvolveResult, dshmsz);
-    return PyArray_SimpleNewFromData(2, dims, NPY_INT16, dConvolveResultClone);
-}
+//     npy_intp dims[2] = {dH, dW};
+//     memcpy(dConvolveResultClone, dConvolveResult, dshmsz);
+//     return PyArray_SimpleNewFromData(2, dims, NPY_INT16, dConvolveResultClone);
+// }
 
-static PyObject *convolveColour(PyObject *self, PyObject *args)
-{
-    char *kern;
-    int repeat;
-    double bias;
+// static PyObject *convolveColour(PyObject *self, PyObject *args)
+// {
+//     char *kern;
+//     int repeat;
+//     double bias;
 
-    if (!PyArg_ParseTuple(args, "sid", &kern, &repeat, &bias))
-        return NULL;
+//     if (!PyArg_ParseTuple(args, "sid", &kern, &repeat, &bias))
+//         return NULL;
 
-    memcpy(greyColourMap, colourFullMap, cshmsz*3);
-    memset(greyResult, 0, cshmsz);
-    toGreyScale(0.2126, 0.7152, 0.0722);
-    memcpy(cConvolveMap, greyResult, cshmsz);
+//     memcpy(greyColourMap, colourFullMap, cshmsz*3);
+//     memset(greyResult, 0, cshmsz);
+//     toGreyScale(0.2126, 0.7152, 0.0722);
+//     memcpy(cConvolveMap, greyResult, cshmsz);
     
-    for(int i = 0; i < repeat; i++) {
-        applyKernelColour(kern, cW, cH, bias); 
-        memcpy(cConvolveMap, cConvolveResult, cshmsz);
-    } 
+//     for(int i = 0; i < repeat; i++) {
+//         applyKernelColour(kern, cW, cH, bias); 
+//         memcpy(cConvolveMap, cConvolveResult, cshmsz);
+//     } 
 
-    npy_intp dims[2] = {cH, cW};
-    memcpy(cConvolveResultClone, cConvolveResult, cshmsz);
-    return PyArray_SimpleNewFromData(2, dims, NPY_UINT8, cConvolveResultClone);
-}
+//     npy_intp dims[2] = {cH, cW};
+//     memcpy(cConvolveResultClone, cConvolveResult, cshmsz);
+//     return PyArray_SimpleNewFromData(2, dims, NPY_UINT8, cConvolveResultClone);
+// }
 
-/* TODO: Make this only vertex map */
-static PyObject *saveMap(PyObject *self, PyObject *args)
-{
-    char *map;
-    char *file;
+// /* TODO: Make this only vertex map */
+// static PyObject *saveMap(PyObject *self, PyObject *args)
+// {
+//     char *map;
+//     char *file;
 
-    if (!PyArg_ParseTuple(args, "ss", &map, &file))
-        return NULL;
+//     if (!PyArg_ParseTuple(args, "ss", &map, &file))
+//         return NULL;
 
-    /* TODO: choose if this part can become general or not */
-    memcpy(vPrintMap, vertexFullMap, vshmsz*3);
-    memcpy(nPrintMap, normalResult, dshmsz*3); 
-    saveMap(map, file);
+//     /* TODO: choose if this part can become general or not */
+//     memcpy(vPrintMap, vertexFullMap, vshmsz*3);
+//     memcpy(nPrintMap, normalResult, dshmsz*3); 
+//     saveMap(map, file);
 
-    Py_RETURN_NONE;
-}
+//     Py_RETURN_NONE;
+// }
 
-static PyObject *getNormal(PyObject *self, PyObject *args)
-{
-    memcpy(normalMap, vertexFullMap, vshmsz*3);
-    double bias = 0.5;
-    char * kern = (char*)"placeholder";
-    computeDifferential(kern, bias); // applies sobel kernel to each plane 
-    crossMaps(); // cross product on three planes, store in normalMap result
+// static PyObject *getNormal(PyObject *self, PyObject *args)
+// {
+//     memcpy(normalMap, vertexFullMap, vshmsz*3);
+//     double bias = 0.5;
+//     char * kern = (char*)"placeholder";
+//     computeDifferential(kern, bias); // applies sobel kernel to each plane 
+//     crossMaps(); // cross product on three planes, store in normalMap result
 
-    npy_intp dims[3] = {dH, dW, 3};
-    memcpy(normalResultClone, normalResult, dshmsz*3); 
-    return PyArray_SimpleNewFromData(3, dims, NPY_INT16, normalResultClone);
-}
+//     npy_intp dims[3] = {dH, dW, 3};
+//     memcpy(normalResultClone, normalResult, dshmsz*3); 
+//     return PyArray_SimpleNewFromData(3, dims, NPY_INT16, normalResultClone);
+// }
 
 static PyMethodDef DepthSenseMethods[] = {
     // GET MAPS
     {"getDepthMap",  getDepth, METH_VARARGS, "Get Depth Map"},
     {"getDepthColouredMap",  getDepthColoured, METH_VARARGS, "Get Depth Coloured Map"},
     {"getColourMap",  getColour, METH_VARARGS, "Get Colour Map"},
-    {"getGreyScaleMap",  getGreyScale, METH_VARARGS, "Get Grey Scale Colour Map"},
+    // {"getGreyScaleMap",  getGreyScale, METH_VARARGS, "Get Grey Scale Colour Map"},
     {"getVertices",  getVertex, METH_VARARGS, "Get Vertex Map"},
     {"getVerticesFP",  getVertexFP, METH_VARARGS, "Get Floating Point Vertex Map"},
-    {"getNormalMap",  getNormal, METH_VARARGS, "Get Normal Map"},
+    // {"getNormalMap",  getNormal, METH_VARARGS, "Get Normal Map"},
     {"getUVMap",  getUV, METH_VARARGS, "Get UV Map"},
     {"getSyncMap",  getSync, METH_VARARGS, "Get Colour Overlay Map"},
     {"getAcceleration",  getAccel, METH_VARARGS, "Get Acceleration"},
     // CREATE MODULE
-    {"initDepthSense",  initDS, METH_VARARGS, "Init DepthSense"},
+    {"initPySenz3d",  initDS, METH_VARARGS, "Init DepthSense"},
     {"killDepthSense",  killDS, METH_VARARGS, "Kill DepthSense"},
     // PROCESS MAPS
-    {"getBlobAt",  getBlob, METH_VARARGS, "Find blob at location in the depth map"},
-    {"convolveDepthMap",  convolveDepth, METH_VARARGS, "Apply specified kernel to the depth map"},
-    {"convolveColourMap",  convolveColour, METH_VARARGS, "Apply specified kernel to the image"},
+    // {"getBlobAt",  getBlob, METH_VARARGS, "Find blob at location in the depth map"},
+    // {"convolveDepthMap",  convolveDepth, METH_VARARGS, "Apply specified kernel to the depth map"},
+    // {"convolveColourMap",  convolveColour, METH_VARARGS, "Apply specified kernel to the image"},
     // SAVE MAPS
-    {"saveMap",  saveMap, METH_VARARGS, "Save the specified map"},
+    // {"saveMap",  saveMap, METH_VARARGS, "Save the specified map"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 
-PyMODINIT_FUNC initDepthSense(void)
+PyMODINIT_FUNC initpysenz3d(void)
 {
-    (void) Py_InitModule("DepthSense", DepthSenseMethods);
+    (void) Py_InitModule("pysenz3d", DepthSenseMethods);
     // Clean up forked process, attach it to the python exit hook
 
     // (void) Py_AtExit(killds);  // force the user to clean up module manually?
@@ -374,7 +375,7 @@ int main(int argc, char* argv[])
     Py_Initialize();
 
     /* Add a static module */
-    initDepthSense();
+    initpysenz3d();
 
     //initds(); //for testing
 
