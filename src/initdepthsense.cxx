@@ -17,14 +17,16 @@
 
 // C includes
 #include <stdio.h>
+#ifndef _MSC_VER
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <pthread.h>
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 
 // C++ includes
 #include <vector>
@@ -94,7 +96,11 @@ int16_t * diffResult;
 int16_t * normalResult;
 
 // thread for running processing loop
+#ifndef _MSC_VER
 pthread_t looper;
+#else
+HANDLE looper;
+#endif
 
 // can't write atomic op but i can atleast do a swap
 static void uptrSwap (uint8_t **pa, uint8_t **pb){
@@ -407,17 +413,6 @@ static void onDeviceDisconnected(Context context, Context::DeviceRemovedData dat
     printf("Device disconnected\n");
 }
 
-static void * initmap(int sz) 
-{
-    void * map;     
-    if ((map = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0)) == MAP_FAILED) {
-        perror("mmap: cannot alloc shmem;");
-        exit(1);
-    }
-
-    return map;
-}
-
 static void * initblock(int sz) 
 {
     void * block;     
@@ -433,19 +428,23 @@ void killds()
 {
     cout << "DEPTHSENSE SHUTDOWN IN PROGRESS ..." << endl;
     g_context.quit();
+    #ifndef _MSC_VER
     pthread_join(looper, NULL);
+    #else
+    WaitForSingleObject(looper, NULL);
+    #endif
     cout << "THREAD EXIT" << endl;
-    munmap(depthMap, dshmsz);
-    munmap(depthFullMap, dshmsz);
-    munmap(colourMap, cshmsz*3);
-    munmap(colourFullMap, cshmsz*3);
-    munmap(vertexMap, vshmsz*3);
-    munmap(vertexFullMap, vshmsz*3);
-    munmap(vertexFMap, ushmsz*3);
-    munmap(vertexFFullMap, ushmsz*3);
-    munmap(uvMap, ushmsz*2);
-    munmap(uvMap, ushmsz*2);
-    munmap(uvFullMap, ushmsz*2);
+    free(depthMap);
+    free(depthFullMap);
+    free(colourMap);
+    free(colourFullMap);
+    free(vertexMap);
+    free(vertexFullMap);
+    free(vertexFMap);
+    free(vertexFFullMap);
+    free(uvMap);
+    free(uvMap);
+    free(uvFullMap);
     free(depthCMap);
     free(depthColouredMap);
     free(dConvolveMap);
@@ -463,34 +462,38 @@ void killds()
     cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
 }
 
+#ifndef _MSC_VER
 void* loopfunc(void *arg)
+#else
+DWORD WINAPI loopfunc(void *arg) 
+#endif
 {
     cout << "EVENT LOOP RUNNING" << endl;
     g_context.run();
     cout << "EVENT LOOP FINISHED" << endl;
-    return NULL;
+    return 0;
 }
 
 void initds()
 {
     // shared mem double buffers
-    depthMap = (int16_t *) initmap(dshmsz); 
-    depthFullMap = (int16_t *) initmap(dshmsz); 
+    depthMap = (int16_t *) initblock(dshmsz); 
+    depthFullMap = (int16_t *) initblock(dshmsz); 
 
-    accelMap = (float *) initmap(3*sizeof(float)); 
-    accelFullMap = (float *) initmap(3*sizeof(float)); 
+    accelMap = (float *) initblock(3*sizeof(float)); 
+    accelFullMap = (float *) initblock(3*sizeof(float)); 
 
-    colourMap = (uint8_t *) initmap(cshmsz*3); 
-    colourFullMap = (uint8_t *) initmap(cshmsz*3); 
+    colourMap = (uint8_t *) initblock(cshmsz*3); 
+    colourFullMap = (uint8_t *) initblock(cshmsz*3); 
 
-    vertexMap = (int16_t *) initmap(vshmsz*3); 
-    vertexFullMap = (int16_t *) initmap(vshmsz*3); 
+    vertexMap = (int16_t *) initblock(vshmsz*3); 
+    vertexFullMap = (int16_t *) initblock(vshmsz*3); 
     
-    uvMap = (float *) initmap(ushmsz*2); 
-    uvFullMap = (float *) initmap(ushmsz*2); 
+    uvMap = (float *) initblock(ushmsz*2); 
+    uvFullMap = (float *) initblock(ushmsz*2); 
 
-    vertexFMap = (float *) initmap(ushmsz*3); 
-    vertexFFullMap = (float *) initmap(ushmsz*3); 
+    vertexFMap = (float *) initblock(ushmsz*3); 
+    vertexFFullMap = (float *) initblock(ushmsz*3); 
 
     // mem buffer blocks
     depthCMap = (int16_t *) initblock(dshmsz);
@@ -541,6 +544,10 @@ void initds()
     g_context.startNodes();
 
     // launch processing loop in a separate thread
+    #ifndef _MSC_VER
     pthread_create(&looper, NULL, loopfunc, (void*)NULL);
+    #else
+    looper = CreateThread(NULL, 0, loopfunc, (void*)NULL, 0, NULL);
+    #endif
 }
 

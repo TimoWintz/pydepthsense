@@ -8,18 +8,30 @@ if sys.version_info >= (3, 0):
     raise NotImplementedError("Python 3.x is not supported.")
 
 from distutils.core import setup, Extension
+from platform import system
 import numpy
 
 envpath = ''
 from distutils.sysconfig import get_python_inc
 print(get_python_inc())
 
-module = Extension('pysenz3d',
-        include_dirs = [numpy.get_include(), '/opt/softkinetic/DepthSenseSDK/include'],
-        libraries = ['DepthSense'],
-        library_dirs = [envpath+'/lib', '/opt/softkinetic/DepthSenseSDK/lib'],
-        # extra_compile_args = ['-std=g++11'],
-        sources = ['src/depthsense.cxx', 'src/initdepthsense.cxx']) #, 'src/imageproccessing.cxx'])
+modname = 'pysenz3d'
+libnames = ['DepthSense']
+sourcefiles = ['src/depthsense.cxx', 'src/initdepthsense.cxx']
+
+if system() == "Windows":
+	module = Extension(modname,
+		include_dirs = ['./inc', numpy.get_include(), 'C:\\Program Files (x86)\\SoftKinetic\\DepthSenseSDK\\include'],
+		libraries = libnames,
+		library_dirs = ['./lib', 'C:\Program Files (x86)\\SoftKinetic\\DepthSenseSDK\\lib'],
+		sources = sourcefiles)
+else:
+	module = Extension(modname,
+        	include_dirs = [numpy.get_include(), '/opt/softkinetic/DepthSenseSDK/include'],
+	        libraries = libnames,
+        	library_dirs = [envpath+'/lib', '/opt/softkinetic/DepthSenseSDK/lib'],
+	        # extra_compile_args = ['-std=g++11'],
+        	sources = sourcefiles)
 
 setup (name = 'pysenz3d',
         version = '1.0',
