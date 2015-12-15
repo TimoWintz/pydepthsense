@@ -23,9 +23,11 @@
 
 // C includes
 #include <stdio.h>
+#ifndef _MSC_VER
 #include <stdint.h>
-#include <sys/types.h>
 #include <unistd.h>
+#endif
+#include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 
