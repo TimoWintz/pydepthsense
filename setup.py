@@ -35,7 +35,7 @@ elif ostype == 'Linux':
     depthsensesdk_path = "/opt/softkinetic/DepthSenseSDK/"
     additional_include = './'
 
-modname = 'pysenz3d'
+modname = 'pydepthsense'
 libnames = ['DepthSense']
 sourcefiles = ['src/depthsense.cxx', 'src/initdepthsense.cxx']
 
@@ -45,7 +45,7 @@ module = Extension(modname,
     library_dirs = ['./lib', depthsensesdk_path+'lib'],
     sources = sourcefiles)
 
-setup (name = 'pysenz3d',
+setup (name = 'pydepthsense',
         version = '1.0',
         description = 'Python wrapper for the Senz3d camera under Linux.',
         author = 'Antoine Loriette',

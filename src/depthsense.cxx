@@ -48,14 +48,6 @@ float accelMapClone[3];
 float uvMapClone[320*240*2];
 float vertexFMapClone[320*240*3];
 uint8_t syncMapClone[320*240*3];
-int16_t nPrintMap[320*240*3];
-int16_t vPrintMap[320*240*3];
-
-uint8_t depthColouredMapClone[320*240*3];
-int16_t dConvolveResultClone[320*240];
-uint8_t cConvolveResultClone[640*480];
-uint8_t greyResultClone[640*480];
-int16_t normalResultClone[320*240*3];
 
 using namespace std;
 
@@ -88,31 +80,10 @@ void buildSyncMap()
             syncMapClone[i*dW*3 + j*3 + 0] = colx;
             syncMapClone[i*dW*3 + j*3 + 1] = coly;
             syncMapClone[i*dW*3 + j*3 + 2] = colz;
-
         }
     }
 }
 
-void buildDepthColoured() 
-{
-    for(int i=0; i < dH; i++) {
-        for(int j=0; j < dW; j++) {
-            //TODO: Make this not complete shit
-            //colour = ((uint32_t)depthCMap[i*dW + j]) * 524; // convert approx 2^15 bits of data to 2^24 bits  
-            //colour = 16777216.0*(((double)depthCMap[i*dW + j])/31999.0); // 2^24 * zval/~2^15(zrange)
-            //cout << depth << " " << depthCMap[i*dW + j] << endl;
-
-            //depthColouredMap[i*dW*3 + j*3 + 0] = (uint8_t) ((colour << (32 - 8*1)) >> (32 - 8));
-            //depthColouredMap[i*dW*3 + j*3 + 1] = (uint8_t) ((colour << (32 - 8*2)) >> (32 - 8));
-            //depthColouredMap[i*dW*3 + j*3 + 2] = (uint8_t) ((colour << (32 - 8*3)) >> (32 - 8));
-
-            depthColouredMap[i*dW*3 + j*3 + 0] = (uint8_t) (((depthCMap[i*dW + j] << (16 - 5*1)) >> (16 - 5)) << 3);
-            depthColouredMap[i*dW*3 + j*3 + 1] = (uint8_t) (((depthCMap[i*dW + j] << (16 - 5*2)) >> (16 - 5)) << 3);
-            depthColouredMap[i*dW*3 + j*3 + 2] = (uint8_t) (((depthCMap[i*dW + j] << (16 - 5*3)) >> (16 - 5)) << 3);
-
-        }
-    }
-}
 
 // Python Callbacks
 static PyObject *getColour(PyObject *self, PyObject *args)
@@ -129,18 +100,6 @@ static PyObject *getDepth(PyObject *self, PyObject *args)
 
     memcpy(depthMapClone, depthFullMap, dshmsz);
     return PyArray_SimpleNewFromData(2, dims, NPY_INT16, depthMapClone);
-}
-
-/* TODO: extract this bad boy */
-// DOESNT WORK
-static PyObject *getDepthColoured(PyObject *self, PyObject *args)
-{
-    npy_intp dims[3] = {dH, dW, 3};
-
-    memcpy(depthCMap, depthFullMap, dshmsz);
-    memset(depthColouredMap, 0, hshmsz*3);
-        memcpy(depthColouredMapClone, depthColouredMap, hshmsz*3);
-    return PyArray_SimpleNewFromData(3, dims, NPY_UINT8, depthColouredMapClone);
 }
 
 static PyObject *getAccel(PyObject *self, PyObject *args)
@@ -200,40 +159,27 @@ static PyObject *killDS(PyObject *self, PyObject *args)
 static PyMethodDef DepthSenseMethods[] = {
     // GET MAPS
     {"getDepthMap",  getDepth, METH_VARARGS, "Get Depth Map"},
-    {"getDepthColouredMap",  getDepthColoured, METH_VARARGS, "Get Depth Coloured Map"},
     {"getColourMap",  getColour, METH_VARARGS, "Get Colour Map"},
-    // {"getGreyScaleMap",  getGreyScale, METH_VARARGS, "Get Grey Scale Colour Map"},
     {"getVertices",  getVertex, METH_VARARGS, "Get Vertex Map"},
     {"getVerticesFP",  getVertexFP, METH_VARARGS, "Get Floating Point Vertex Map"},
-    // {"getNormalMap",  getNormal, METH_VARARGS, "Get Normal Map"},
     {"getUVMap",  getUV, METH_VARARGS, "Get UV Map"},
     {"getSyncMap",  getSync, METH_VARARGS, "Get Colour Overlay Map"},
     {"getAcceleration",  getAccel, METH_VARARGS, "Get Acceleration"},
     // CREATE MODULE
-    {"initPySenz3d",  initDS, METH_VARARGS, "Init DepthSense"},
-    {"killDepthSense",  killDS, METH_VARARGS, "Kill DepthSense"},
-    // PROCESS MAPS
-    // {"getBlobAt",  getBlob, METH_VARARGS, "Find blob at location in the depth map"},
-    // {"convolveDepthMap",  convolveDepth, METH_VARARGS, "Apply specified kernel to the depth map"},
-    // {"convolveColourMap",  convolveColour, METH_VARARGS, "Apply specified kernel to the image"},
-    // SAVE MAPS
-    // {"saveMap",  saveMap, METH_VARARGS, "Save the specified map"},
+    {"start",  initDS, METH_VARARGS, "Start DepthSense"},
+    {"close",  killDS, METH_VARARGS, "Close DepthSense"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 
-PyMODINIT_FUNC initpysenz3d(void)
+PyMODINIT_FUNC initpydepthsense(void)
 {
-    (void) Py_InitModule("pysenz3d", DepthSenseMethods);
-    // Clean up forked process, attach it to the python exit hook
-
-    // (void) Py_AtExit(killds);  // force the user to clean up module manually?
+    (void) Py_InitModule("pydepthsense", DepthSenseMethods);
     import_array();
 }
 
 int main(int argc, char* argv[])
 {
-
     /* Pass argv[0] to the Python interpreter */
     Py_SetProgramName((char *)"DepthSense");
 
@@ -241,9 +187,7 @@ int main(int argc, char* argv[])
     Py_Initialize();
 
     /* Add a static module */
-    initpysenz3d();
-
-    //initds(); //for testing
+    initpydepthsense();
 
     return 0;
 }

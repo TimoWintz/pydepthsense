@@ -79,22 +79,6 @@ float *accelFullMap;
 int16_t * depthCMap;
 uint8_t * depthColouredMap;
 
-int16_t * dConvolveMap;
-int16_t * dConvolveResult;
-
-uint8_t * cConvolveMap;
-uint8_t * cConvolveResult;
-
-uint8_t * greyColourMap;
-uint8_t * greyResult;
-
-int16_t * normalMap;
-int16_t * dxMap;
-int16_t * dyMap;
-int16_t * diffMap;
-int16_t * diffResult;
-int16_t * normalResult;
-
 // thread for running processing loop
 #ifndef _MSC_VER
 pthread_t looper;
@@ -446,18 +430,7 @@ void killds()
     free(uvFullMap);
     free(depthCMap);
     free(depthColouredMap);
-    free(dConvolveMap);
-    free(dConvolveResult);
-    free(cConvolveMap);
-    free(cConvolveResult);
-    free(greyColourMap);
-    free(greyResult);
-    free(normalMap);
-    free(dxMap);
-    free(dyMap);
-    free(diffMap);
-    free(diffResult);
-    free(normalResult);
+
     cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
 }
 
@@ -498,22 +471,6 @@ void initds()
     depthCMap = (int16_t *) initblock(dshmsz);
     depthColouredMap = (uint8_t *) initblock(hshmsz*3);
     
-    dConvolveMap = (int16_t *) initblock(dshmsz);
-    dConvolveResult = (int16_t *) initblock(dshmsz);
-    
-    cConvolveMap = (uint8_t *) initblock(cshmsz);
-    cConvolveResult = (uint8_t *) initblock(cshmsz);
-    
-    greyColourMap = (uint8_t *) initblock(cshmsz*3);
-    greyResult = (uint8_t *) initblock(cshmsz);
-    
-    normalMap = (int16_t *) initblock(dshmsz*3);
-    dxMap = (int16_t *) initblock(dshmsz*3);
-    dyMap = (int16_t *) initblock(dshmsz*3);
-    diffMap = (int16_t *) initblock(dshmsz*3);
-    diffResult = (int16_t *) initblock(dshmsz*3);
-    normalResult = (int16_t *) initblock(dshmsz*3);
-
     // prepare the context
     g_context = Context::createStandalone();
     // TODO: Support multiple cameras ... standalone mode forces
