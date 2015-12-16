@@ -1,37 +1,49 @@
-
 import sys
-
-## only python 2.x supported - due to moduleInit wrapping
-try: from exceptions import NotImplementedError
-except ImportError: pass
-if sys.version_info >= (3, 0):
-    raise NotImplementedError("Python 3.x is not supported.")
-
-from distutils.core import setup, Extension
 from platform import system
+from distutils.core import setup, Extension
 import numpy
 
-envpath = ''
-from distutils.sysconfig import get_python_inc
-print(get_python_inc())
+##
+## compatibility checks
+##
+try: from exceptions import NotImplementedError
+except ImportError: pass
+
+if sys.version_info >= (3, 0):  # due to C extension wrapping
+    raise NotImplementedError("Python 3.x is not supported.")
+
+ostype = system()
+if ostype != 'Linux' and ostype != 'Windows':
+    raise NotImplementedError("Only Windows and Linux supported.")
+
+
+##
+## Platform dependant configuration
+##
+is_64bits = sys.maxsize > 2**32
+
+## Windows 32bits
+if ostype == 'Windows' and is_64bits == False:
+    depthsensesdk_path = "C:\\Program Files (x86)\\SoftKinetic\\DepthSenseSDK\\"
+    additional_include = './inc'
+## Windows 64bits
+elif ostype == 'Windows' and is_64bits == True:
+    depthsensesdk_path = "C:\\Program Files\\SoftKinetic\\DepthSenseSDK\\"
+    additional_include = './inc'
+## Linux
+elif ostype == 'Linux':
+    depthsensesdk_path = "/opt/softkinetic/DepthSenseSDK/"
+    additional_include = './'
 
 modname = 'pysenz3d'
 libnames = ['DepthSense']
 sourcefiles = ['src/depthsense.cxx', 'src/initdepthsense.cxx']
 
-if system() == "Windows":
-	module = Extension(modname,
-		include_dirs = ['./inc', numpy.get_include(), 'C:\\Program Files (x86)\\SoftKinetic\\DepthSenseSDK\\include'],
-		libraries = libnames,
-		library_dirs = ['./lib', 'C:\Program Files (x86)\\SoftKinetic\\DepthSenseSDK\\lib'],
-		sources = sourcefiles)
-else:
-	module = Extension(modname,
-        	include_dirs = [numpy.get_include(), '/opt/softkinetic/DepthSenseSDK/include'],
-	        libraries = libnames,
-        	library_dirs = [envpath+'/lib', '/opt/softkinetic/DepthSenseSDK/lib'],
-	        # extra_compile_args = ['-std=g++11'],
-        	sources = sourcefiles)
+module = Extension(modname,
+    include_dirs = [numpy.get_include(), depthsensesdk_path+'include', additional_include],
+    libraries = libnames,
+    library_dirs = ['./lib', depthsensesdk_path+'lib'],
+    sources = sourcefiles)
 
 setup (name = 'pysenz3d',
         version = '1.0',
