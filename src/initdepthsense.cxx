@@ -416,6 +416,7 @@ void killds()
     pthread_join(looper, NULL);
     #else
     WaitForSingleObject(looper, NULL);
+    CloseHandle(looper);
     #endif
     cout << "THREAD EXIT" << endl;
     free(depthMap);
