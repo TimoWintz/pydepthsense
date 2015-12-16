@@ -443,7 +443,6 @@ void killds()
     free(vertexFMap);
     free(vertexFFullMap);
     free(uvMap);
-    free(uvMap);
     free(uvFullMap);
     free(depthCMap);
     free(depthColouredMap);
