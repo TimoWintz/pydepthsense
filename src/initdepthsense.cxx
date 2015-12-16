@@ -419,6 +419,8 @@ void killds()
     CloseHandle(looper);
     #endif
     cout << "THREAD EXIT" << endl;
+	g_context.stopNodes();
+
     free(depthMap);
     free(depthFullMap);
     free(colourMap);
@@ -431,6 +433,10 @@ void killds()
     free(uvFullMap);
     free(depthCMap);
     free(depthColouredMap);
+
+    // prevents hang on exit on Windows by detaching
+	// from the server properly
+	g_context.unset();
 
     cout << "DEPTHSENSE SHUTDOWN SUCCESSFUL" << endl;
 }
