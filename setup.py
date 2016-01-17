@@ -26,14 +26,17 @@ is_64bits = sys.maxsize > 2**32
 if ostype == 'Windows' and is_64bits == False:
     depthsensesdk_path = "C:\\Program Files (x86)\\SoftKinetic\\DepthSenseSDK\\"
     additional_include = './inc'
+    compile_args = ['/EHsc']
 ## Windows 64bits
 elif ostype == 'Windows' and is_64bits == True:
     depthsensesdk_path = "C:\\Program Files\\SoftKinetic\\DepthSenseSDK\\"
     additional_include = './inc'
+    compile_args = ['/EHsc']
 ## Linux
 elif ostype == 'Linux':
     depthsensesdk_path = "/opt/softkinetic/DepthSenseSDK/"
     additional_include = './'
+    compile_args = []
 
 modname = 'pydepthsense'
 libnames = ['DepthSense']
@@ -43,6 +46,7 @@ module = Extension(modname,
     include_dirs = [numpy.get_include(), depthsensesdk_path+'include', additional_include],
     libraries = libnames,
     library_dirs = ['./lib', depthsensesdk_path+'lib'],
+    extra_compile_args = compile_args,
     sources = sourcefiles)
 
 setup (name = 'pydepthsense',
