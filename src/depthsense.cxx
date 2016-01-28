@@ -171,7 +171,49 @@ static PyMethodDef DepthSenseMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+#ifdef PYTHON_3
+static struct PyModuleDef pydepthsense = {
+   PyModuleDef_HEAD_INIT,
+   "pydepthsense",   /* name of module */
+   NULL, /* module documentation, may be NULL */
+   -1,       /* size of per-interpreter state of the module,
+                or -1 if the module keeps state in global variables. */
+   DepthSenseMethods
+};
 
+PyMODINIT_FUNC PyInit_DepthSense(void)
+{
+    import_array()
+    return PyModule_Create(&pydepthsense);
+}
+int main(int argc, char *argv[])
+{
+    wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+    if (program == NULL) {
+        fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
+        exit(1);
+    }
+
+    /* Add a built-in module, before Py_Initialize */
+    PyImport_AppendInittab("pydepthsense", PyInit_DepthSense);
+
+    /* Pass argv[0] to the Python interpreter */
+    Py_SetProgramName(program);
+
+    /* Initialize the Python interpreter.  Required. */
+    Py_Initialize();
+
+    /* Optionally import the module; alternatively,
+       import can be deferred until the embedded script
+       imports it. */
+    PyImport_ImportModule("pydepthsense");
+
+    PyMem_RawFree(program);
+    return 0;
+}
+#endif
+
+#ifdef PYTHON_2
 PyMODINIT_FUNC initpydepthsense(void)
 {
     (void) Py_InitModule("pydepthsense", DepthSenseMethods);
@@ -191,3 +233,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+#endif
