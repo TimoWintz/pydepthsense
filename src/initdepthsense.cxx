@@ -60,6 +60,9 @@ static uint32_t g_dFrames = 0;
 int16_t *depthMap; 
 int16_t *depthFullMap; 
 
+int16_t *confidenceMap; 
+int16_t *confidenceFullMap; 
+
 int16_t *vertexMap; 
 int16_t *vertexFullMap; 
 
@@ -129,7 +132,9 @@ static void onNewDepthSample(DepthNode node, DepthNode::NewSampleReceivedData da
 {
     // Depth
     memcpy(depthMap, data.depthMap, dshmsz);
+    memcpy(confidenceMap, data.confidenceMap, dshmsz);
     iptrSwap(&depthMap, &depthFullMap);
+    iptrSwap(&confidenceMap, &confidenceFullMap);
 
     // Verticies
     Vertex vertex;
@@ -234,6 +239,7 @@ static void configureDepthNode()
         g_dnode.setConfidenceThreshold(100);
 
         g_dnode.setEnableDepthMap(true);
+        g_dnode.setEnableConfidenceMap(true);
         g_dnode.setEnableVertices(true);
         g_dnode.setEnableVerticesFloatingPoint(true);
         g_dnode.setEnableAccelerometer(true);
@@ -423,6 +429,8 @@ void killds()
 
     free(depthMap);
     free(depthFullMap);
+    free(confidenceMap);
+    free(confidenceFullMap);
     free(colourMap);
     free(colourFullMap);
     free(vertexMap);
@@ -458,6 +466,9 @@ void initds()
     // shared mem double buffers
     depthMap = (int16_t *) initblock(dshmsz); 
     depthFullMap = (int16_t *) initblock(dshmsz); 
+
+    confidenceMap = (int16_t *) initblock(dshmsz); 
+    confidenceFullMap = (int16_t *) initblock(dshmsz); 
 
     accelMap = (float *) initblock(3*sizeof(float)); 
     accelFullMap = (float *) initblock(3*sizeof(float)); 

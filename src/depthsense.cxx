@@ -44,6 +44,7 @@
 uint8_t colourMapClone[640*480*3];
 int16_t depthMapClone[320*240];
 int16_t vertexMapClone[320*240*3];
+int16_t confidenceMapClone[320*240];
 float accelMapClone[3];
 float uvMapClone[320*240*2];
 float vertexFMapClone[320*240*3];
@@ -100,6 +101,14 @@ static PyObject *getDepth(PyObject *self, PyObject *args)
 
     memcpy(depthMapClone, depthFullMap, dshmsz);
     return PyArray_SimpleNewFromData(2, dims, NPY_INT16, depthMapClone);
+}
+
+static PyObject *getConfidence(PyObject *self, PyObject *args)
+{
+    npy_intp dims[2] = {dH, dW};
+
+    memcpy(confidenceMapClone, confidenceFullMap, dshmsz);
+    return PyArray_SimpleNewFromData(2, dims, NPY_INT16, confidenceMapClone);
 }
 
 static PyObject *getAccel(PyObject *self, PyObject *args)
@@ -159,6 +168,7 @@ static PyObject *killDS(PyObject *self, PyObject *args)
 static PyMethodDef DepthSenseMethods[] = {
     // GET MAPS
     {"getDepthMap",  getDepth, METH_VARARGS, "Get Depth Map"},
+    {"getConfidenceMap",  getConfidence, METH_VARARGS, "Get Confidence Map"},
     {"getColourMap",  getColour, METH_VARARGS, "Get Colour Map"},
     {"getVertices",  getVertex, METH_VARARGS, "Get Vertex Map"},
     {"getVerticesFP",  getVertexFP, METH_VARARGS, "Get Floating Point Vertex Map"},

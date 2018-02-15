@@ -26,7 +26,9 @@ static int hshmsz = dW*dH*sizeof(uint8_t);
 
 // shared mem depth maps
 extern int16_t *depthMap;
+extern int16_t *confidenceMap;
 extern int16_t *depthFullMap;
+extern int16_t *confidenceFullMap;
 
 // shared mem vertex maps
 extern int16_t *vertexMap;
